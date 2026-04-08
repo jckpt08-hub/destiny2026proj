@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Navigation Site</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: "Arial", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: radial-gradient(circle at top, #37206f 0%, #24144f 38%, #170d36 72%, #0f0824 100%);
+      color: #ffffff;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 80vh;
+      overflow: hidden;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      min-height: 80vh;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(40px);
+    }
+
+    .page.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .page.enter-forward {
+      animation: slideInFromRight 0.34s ease forwards;
+    }
+
+    .page.exit-forward {
+      animation: slideOutToLeft 0.34s ease forwards;
+      z-index: 1;
+    }
+
+    .page.enter-back {
+      animation: slideInFromLeft 0.34s ease forwards;
+    }
+
+    .page.exit-back {
+      animation: slideOutToRight 0.34s ease forwards;
+      z-index: 1;
+    }
+
+    @keyframes slideInFromRight {
+      from { opacity: 0; transform: translateX(56px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideOutToLeft {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-56px); }
+    }
+
+    @keyframes slideInFromLeft {
+      from { opacity: 0; transform: translateX(-56px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideOutToRight {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(56px); }
+    }
+
+    .logo-btn {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.22s ease, filter 0.22s ease;
+    }
+
+    .logo-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      filter: drop-shadow(0 0 24px rgba(166, 143, 255, 0.35));
+    }
+
+    .logo-trace {
+      width: min(74vw, 560px);
+      max-width: 100%;
+      display: block;
+      filter: drop-shadow(0 18px 38px rgba(149, 120, 255, 0.24));
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .credit-text {
+      margin: -8px 0 0 0;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .title {
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.82);
+      text-align: center;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .menu-stack {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-btn {
+      border: 1px solid rgba(255,255,255,0.24);
+      cursor: pointer;
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+      box-shadow: 0 16px 38px rgba(16, 10, 40, 0.32);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      opacity: 1;
+      filter: brightness(1.07);
+      box-shadow: 0 20px 42px rgba(115, 88, 255, 0.34);
+    }
+
+    .nav-btn:active, .hex-btn:active, .logo-btn:active, .back-btn:active {
+      transform: scale(0.98);
+    }
+
+    .small-btn {
+      width: 220px;
+      height: 64px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #7d52ff 0%, #5d8dff 100%);
+      font-size: 1rem;
+    }
+
+    .big-btn {
+      width: min(90vw, 430px);
+      height: 96px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #7b58ff 0%, #5778ff 100%);
+      font-size: 1.5rem;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 100;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: rgba(130, 98, 255, 0.18);
+      color: #ffffff;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 24px rgba(15, 8, 36, 0.34);
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(130, 98, 255, 0.28);
+      box-shadow: 0 16px 30px rgba(115, 88, 255, 0.28);
+    }
+
+    .blank-box {
+      width: min(90vw, 760px);
+      min-height: 320px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(9, 5, 24, 0.28);
+      backdrop-filter: blur(14px);
+    }
+
+    .blank-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .hex-grid {
+      width: min(95vw, 900px);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      justify-items: center;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .hex-btn {
+      width: 190px;
+      height: 210px;
+      border: 1px solid rgba(255,255,255,0.20);
+      color: white;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+      background: linear-gradient(135deg, #6f4fff 0%, #4f74ff 100%);
+      box-shadow: 0 16px 34px rgba(12, 7, 30, 0.34);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.22s ease, filter 0.22s ease, box-shadow 0.22s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.35;
+      backdrop-filter: blur(10px);
+    }
+
+    .hex-btn:hover {
+      transform: translateY(-5px) scale(1.02);
+      filter: brightness(1.08);
+      box-shadow: 0 20px 40px rgba(115, 88, 255, 0.34);
+    }
+
+    .pair-wrap {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .pair-btn {
+      width: min(42vw, 240px);
+      min-width: 170px;
+      height: 90px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #7b58ff 0%, #567dff 100%);
+      font-size: 1.2rem;
+    }
+
+    .tool-search-wrap {
+      width: min(92vw, 980px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    #tool-intro {
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 72px;
+      padding-bottom: 28px;
+      overflow-y: auto;
+    }
+
+    .tool-search {
+      width: min(92vw, 720px);
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: #ffffff;
+      font-size: 1rem;
+      outline: none;
+      box-shadow: 0 12px 28px rgba(9, 5, 24, 0.2);
+    }
+
+    .tool-search::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .tool-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .tool-btn {
+      width: 100%;
+      min-height: 74px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(135deg, rgba(120,88,255,0.95) 0%, rgba(86,125,255,0.95) 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+      box-shadow: 0 14px 30px rgba(12, 7, 30, 0.28);
+    }
+
+    .tool-btn:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.08);
+      box-shadow: 0 18px 36px rgba(115, 88, 255, 0.34);
+    }
+
+    .tool-detail {
+      width: 100%;
+      min-height: 320px;
+      padding: 28px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.92);
+      box-shadow: 0 18px 36px rgba(9, 5, 24, 0.22);
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .tool-detail h2 {
+      margin: 0 0 14px 0;
+      font-size: 1.45rem;
+      color: #ffffff;
+    }
+
+    .tool-empty {
+      color: rgba(255,255,255,0.68);
+    }
+
+    @media (max-width: 860px) {
+      .hex-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .hex-btn {
+        width: 170px;
+        height: 190px;
+        font-size: 0.98rem;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hex-grid {
+        grid-template-columns: 1fr;
+      }
+      .big-btn {
+        font-size: 1.25rem;
+        height: 82px;
+      }
+      .small-btn {
+        width: 180px;
+        height: 58px;
+      }
+      .pair-btn {
+        width: 80vw;
+      }
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+      .tool-detail {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" id="backBtn" style="display:none;">← 뒤로</button>
+
+  <div class="app">
+    <!-- Front Page -->
+    <section class="page active" id="front">
+      <p class="subtitle">로고를 클릭하여 시작</p>
+      <button class="logo-btn" onclick="showPage('main-menu')" aria-label="메인 메뉴 열기">
+        <svg class="logo-trace" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="인연 로고">
+          <g fill="#ffffff">
+            <circle cx="265" cy="240" r="56" />
+            <circle cx="735" cy="240" r="56" />
+
+            <rect x="230" y="330" width="56" height="185" rx="2" />
+            <rect x="230" y="515" width="570" height="56" rx="2" />
+
+            <rect x="475" y="220" width="56" height="351" rx="2" />
+            <rect x="690" y="330" width="56" height="241" rx="2" />
+            <rect x="530" y="395" width="160" height="56" rx="2" />
+            <rect x="530" y="478" width="160" height="56" rx="2" />
+
+            <polygon points="531,245 746,298 746,354 531,301" />
+          </g>
+        </svg>
+      </button>
+      <p class="credit-text">web made by 이찬빈</p>
+    </section>
+
+    <!-- Main Menu -->
+    <section class="page" id="main-menu">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">메인 메뉴</h1>
+      <div class="menu-stack">
+        <button class="nav-btn small-btn" onclick="showPage('jeongbyeong')">정병테스트</button>
+        <button class="nav-btn big-btn" onclick="showPage('lab-rules')">실험실 수칙</button>
+        <button class="nav-btn big-btn" onclick="showPage('health-menu')">HEALTH</button>
+      </div>
+    </section>
+
+    <!-- 정병테스트 -->
+    <section class="page" id="jeongbyeong">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">정병테스트</h1>
+      <div class="blank-box">
+        <div class="blank-text">빈 페이지</div>
+      </div>
+    </section>
+
+    <!-- 실험실 수칙 -->
+    <section class="page" id="lab-rules">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">실험실 수칙</h1>
+      <div class="hex-grid">
+        <button class="hex-btn" onclick="showPage('tool-intro')">기구소개</button>
+        <button class="hex-btn" onclick="showPage('waste-disposal')">폐시약처리법</button>
+        <button class="hex-btn" onclick="showPage('media-culture')">배지배양법</button>
+        <button class="hex-btn" onclick="showPage('sterilization')">멸균처리법</button>
+        <button class="hex-btn" onclick="showPage('emergency')">실험실 응급상황 시 대처법</button>
+        <button class="hex-btn" onclick="showPage('sample-experiments')">예시실험</button>
+      </div>
+    </section>
+
+    <!-- HEALTH -->
+    <section class="page" id="health-menu">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">HEALTH</h1>
+      <div class="pair-wrap">
+        <button class="nav-btn pair-btn" onclick="showPage('diet-menu')">DIET</button>
+        <button class="nav-btn pair-btn" onclick="showPage('daily-menu')">DAILY</button>
+      </div>
+    </section>
+
+    <!-- DIET -->
+    <section class="page" id="diet-menu">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">DIET</h1>
+      <div class="pair-wrap">
+        <button class="nav-btn pair-btn" onclick="showPage('store-page')">매점</button>
+        <button class="nav-btn pair-btn" onclick="showPage('trail-page')">산책로</button>
+      </div>
+    </section>
+
+    <!-- DAILY -->
+    <section class="page" id="daily-menu">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">DAILY</h1>
+      <div class="pair-wrap">
+        <button class="nav-btn pair-btn" onclick="showPage('headache-page')">두통</button>
+        <button class="nav-btn pair-btn" onclick="showPage('sore-throat-page')">목아픔</button>
+      </div>
+    </section>
+
+    <!-- Blank Subpages -->
+    <section class="page" id="tool-intro">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">기구소개</h1>
+      <div class="tool-search-wrap">
+        <input id="toolSearchInput" class="tool-search" type="text" placeholder="기구 이름 검색" />
+        <div id="toolButtonGrid" class="tool-grid"></div>
+        <div id="toolDetail" class="tool-detail"><div class="tool-empty">기구 버튼을 클릭하면 설명이 여기에 표시됩니다.</div></div>
+      </div>
+    </section>
+
+    <section class="page" id="waste-disposal">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">폐시약처리법</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="media-culture">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">배지배양법</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="sterilization">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">멸균처리법</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="emergency">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">실험실 응급상황 시 대처법</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="sample-experiments">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">예시실험</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="store-page">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">매점</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="trail-page">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">산책로</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="headache-page">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">두통</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+
+    <section class="page" id="sore-throat-page">
+      <h1 class="title" style="text-shadow: 0 8px 28px rgba(132,110,255,0.28);">목아픔</h1>
+      <div class="blank-box"><div class="blank-text">빈 페이지</div></div>
+    </section>
+  </div>
+
+  <script>
+    const historyStack = ['front'];
+    const toolData = [
+      {
+        name: '생물안전작업대',
+        description: `실험자와 샘플을 모두 보호해주는 기구로, 안에 있는 공기를 필터링해서 바깥으로 내보내는 작업을 해주는 기구입니다. 안이 오염될 경우, 다음 사람의 실험에 문제가 생길 수 있으니 유의해야 합니다.
+
+사용 방법
+사용 시에는 쇠로 된 손잡이를 올려 위쪽의 표시된 부분(a)까지 올려줍니다.
+(b) 구역에 있는 붉은색 불빛이 둘 다 푸른색이 되도록 기다린 후 실험을 진행합니다.
+안에 들어있는 것은 멸균 상태이므로 그대로 사용할 수 있으며, 생물안전작업대 밖에 있는 기구를 사용하고자 할 때는 페이퍼타올에 바이오크린콜(소독용 알코올)을 뿌려 닦은 후 사용합니다.
+손은 꼭 장갑을 끼고 알코올로 소독한 후 멸균 상태를 확인한 이후 자리에 앉습니다.
+안에서 실험을 진행할 때는 받침대에 팔을 얹은 상태로 진행하며, 환풍구를 막지 않도록 조심합니다.
+실험이 끝나면 사용한 기구는 모두 바깥으로 빼고, 다음 사용자를 위해 알코올을 뿌리고 키친타올 등으로 내부를 닦아줍니다. 그 후 원래 상태로 덮개를 내려주고 UV를 켜서 소독이 되도록 합니다.
+뒷정리 후에는 옆에 있는 서류에 사용한 시간, 학번, 이름, 목적 등을 양식에 맞추어 쓰고 실험을 마칩니다.`
+      },
+      {
+        name: '저온BOC배양기',
+        description: `사용 목적
+고체 배양기는 한천(agar) 배지를 담은 페트리 접시에 미생물을 접종한 뒤, 이를 인큐베이터에서 일정한 온도로 배양하여 콜로니 형태로 성장시키는 장치입니다. 이를 통해 미생물을 분리하고 관찰할 수 있습니다.
+
+사용 시 유의
+접시를 뒤집어 배양하여 수분이 떨어지는 것을 방지하고, 무균 상태를 유지해 오염을 막아야 합니다.
+
+사용 방법
+배양할 생물의 보관 적정 온도 등을 잘 숙지한 뒤 선생님께 요청드립니다.
+
+대표 실험
+대장균 배양
+항생제 감수성 실험`
+      },
+      {
+        name: '오토클레이브',
+        description: `사용 목적
+고온 고압 멸균에 사용합니다.
+
+사용 방법
+선생님이 진행합니다.
+
+유의 사항
+사용 시 반드시 선생님께 부탁드립니다.
+오토클레이브 사용 가능한 용기인지 확인해야 합니다.
+멸균에 필요한 압력 및 온도를 사전에 확인한 후 선생님께 말씀드립니다.
+절대 직접 손대지 않습니다.
+멸균 후 온도와 압력이 내려갈 때까지 기다린 뒤 선생님께 말씀드립니다.
+
+대표 실험
+배지 제작
+실험 기구 멸균(고온 고압 유지 가능한 유리만 가능)`
+      },
+      {
+        name: '항온수조',
+        description: `특정 화학 반응을 위해 일정한 온도(보통 실온보다 높은 온도)를 유지해야 할 때 사용합니다.
+
+사용 방법
+A. 옆에 있는 스위치를 켭니다.
+B. 옆에 있는 버튼을 이용해 목표 온도를 설정합니다.
+C. 온도가 목표 온도까지 올라갈 동안 기다립니다.
+D. 뚜껑을 열고 원하는 시약이 들어간 튜브를 넣습니다.
+- 뚜껑 및 금속 부분, 수증기가 매우 뜨거우므로 두꺼운 장갑을 꼭 끼고 작업해야 합니다.
+- 뚜껑 안쪽의 물방울은 조심스럽게 다시 수조로 옮겨야 합니다.
+- 마이크로튜브는 스펀지 튜브 랙에 끼워 넣습니다.
+- 코니컬 튜브 사용 시 뚜껑이 완전히 닫히지 않을 수 있으니 주의합니다.
+E. 원하는 시간만큼 온도를 유지한 후 튜브를 꺼내면 됩니다.`
+      },
+      {
+        name: '제빙기',
+        description: `사용 목적
+얼음을 보관하는 기구로, 얼음을 통해 온도를 낮추는 과정이 필요한 실험에서 사용합니다.
+
+사용 방법
+얼음이 필요한 실험의 경우 선생님께 말씀드립니다.
+
+대표 실험
+핵산 추출 실험`
+      },
+      {
+        name: '원심분리기',
+        description: `1730R Centrifuge 원심분리기
+
+사용 목적
+원심분리기는 회전력을 이용하여 액체 또는 고체 입자들을 밀도 차이에 따라 분리하는 장비입니다. 다양한 분야에서 사용되며 입자의 크기, 밀도, 모양, 점성 등을 기준으로 시료를 분리합니다.
+
+사용 방법
+A. 전원을 켭니다: 뒤 전원에 있는 케이블을 연결합니다.
+B. 샘플을 넣습니다.
+- 반드시 대칭으로 샘플을 넣어서 무게중심이 가운데에 오도록 합니다.
+- 대칭으로 배치하지 않을 경우 기기 파손과 샘플 손실 위험이 있습니다.
+C. 속도 설정(RPM)
+- RPM은 분당 회전 수입니다.
+- 실험마다 사용 RPM이 다릅니다.
+D. 시간 설정: TIME 버튼을 눌러 화살표로 시간을 분과 초 단위로 조정합니다.
+E. 온도 설정(필요시)
+F. 회전을 시작합니다.
+G. 완료 후 stop 버튼을 누르고 회전이 감속하여 완전히 멈춘 뒤 뚜껑을 엽니다.
+- 샘플 제거
+- 내부 물기 제거
+- 로터 닦기
+- 뚜껑 열어서 건조
+
+기타
+논문을 참고할 때 RPM이 아닌 RCF(g) 단위를 사용하는 경우가 많으므로 단위 변환이 필요할 수 있습니다.`
+      }
+    ];
+    let currentPageId = 'front';
+    let isTransitioning = false;
+
+    function updateBackButton() {
+      const backBtn = document.getElementById('backBtn');
+      backBtn.style.display = historyStack.length > 1 ? 'block' : 'none';
+    }
+
+    function cleanupPages(targetPage) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('enter-forward', 'exit-forward', 'enter-back', 'exit-back', 'active');
+      });
+      targetPage.classList.add('active');
+    }
+
+    function animateTransition(fromPage, toPage, direction) {
+      if (!toPage || isTransitioning) return;
+      if (fromPage === toPage) return;
+
+      isTransitioning = true;
+      const enterClass = direction === 'back' ? 'enter-back' : 'enter-forward';
+      const exitClass = direction === 'back' ? 'exit-back' : 'exit-forward';
+
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('enter-forward', 'exit-forward', 'enter-back', 'exit-back');
+      });
+
+      if (fromPage) {
+        fromPage.classList.add('active');
+        fromPage.classList.add(exitClass);
+      }
+
+      toPage.classList.add('active');
+      toPage.classList.add(enterClass);
+
+      setTimeout(() => {
+        cleanupPages(toPage);
+        isTransitioning = false;
+      }, 360);
+    }
+
+    function showPage(pageId, options = {}) {
+      const { push = true, direction = 'forward' } = options;
+      const nextPage = document.getElementById(pageId);
+      const currentPage = document.getElementById(currentPageId);
+      if (!nextPage || pageId === currentPageId || isTransitioning) return;
+
+      if (push) {
+        historyStack.push(pageId);
+      }
+
+      animateTransition(currentPage, nextPage, direction);
+      currentPageId = pageId;
+      updateBackButton();
+      window.location.hash = pageId;
+
+      if (pageId === 'tool-intro') {
+        const toolSearchInput = document.getElementById('toolSearchInput');
+        const detail = document.getElementById('toolDetail');
+        if (toolSearchInput) {
+          toolSearchInput.value = '';
+        }
+        if (detail) {
+          detail.dataset.selected = '';
+          detail.innerHTML = '<div class="tool-empty">아래 기구 버튼을 클릭하면 설명이 여기에 표시됩니다.</div>';
+        }
+        renderToolButtons('');
+      }
+    }
+
+    function goBack() {
+      if (historyStack.length <= 1 || isTransitioning) return;
+      historyStack.pop();
+      const prevPageId = historyStack[historyStack.length - 1];
+      showPage(prevPageId, { push: false, direction: 'back' });
+    }
+
+    function renderToolButtons(keyword = '') {
+      const grid = document.getElementById('toolButtonGrid');
+      if (!grid) return;
+      const normalizedKeyword = keyword.split(' ').join('').toLowerCase();
+      const filtered = toolData.filter(tool => tool.name.split(' ').join('').toLowerCase().includes(normalizedKeyword));
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="tool-empty">검색 결과가 없습니다.</div>';
+        return;
+      }
+
+      filtered.forEach(tool => {
+        const button = document.createElement('button');
+        button.className = 'tool-btn';
+        button.textContent = tool.name;
+        button.addEventListener('click', () => showToolDetail(tool.name));
+        grid.appendChild(button);
+      });
+    }
+
+    function showToolDetail(name) {
+      const detail = document.getElementById('toolDetail');
+      const tool = toolData.find(item => item.name === name);
+      if (!detail || !tool) return;
+      detail.dataset.selected = name;
+      detail.innerHTML = `<h2>${tool.name}</h2><div>${tool.description}</div>`;
+    }
+
+    window.addEventListener('load', () => {
+      const backBtn = document.getElementById('backBtn');
+      backBtn.addEventListener('click', goBack);
+
+      const hash = window.location.hash.replace('#', '');
+      const validPage = hash ? document.getElementById(hash) : null;
+
+      if (validPage) {
+        historyStack.length = 0;
+        historyStack.push('front', hash);
+        currentPageId = hash;
+        cleanupPages(validPage);
+      } else {
+        const frontPage = document.getElementById('front');
+        historyStack.length = 0;
+        historyStack.push('front');
+        currentPageId = 'front';
+        cleanupPages(frontPage);
+      }
+
+      const toolSearchInput = document.getElementById('toolSearchInput');
+      if (toolSearchInput) {
+        renderToolButtons('');
+        toolSearchInput.addEventListener('input', (e) => {
+          renderToolButtons(e.target.value.trim());
+        });
+      }
+
+      updateBackButton();
+    });
+  </script>
+</body>
+</html>
