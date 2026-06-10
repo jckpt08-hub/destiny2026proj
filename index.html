@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Navigation Site</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: "Arial", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: radial-gradient(circle at top, #37206f 0%, #24144f 38%, #170d36 72%, #0f0824 100%);
+      color: #ffffff;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100dvh;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      min-height: 100dvh;
+      padding: 72px 20px 40px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(40px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .page.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .page.enter-forward { animation: slideInFromRight 0.34s ease forwards; }
+    .page.exit-forward { animation: slideOutToLeft 0.34s ease forwards; z-index: 1; }
+    .page.enter-back { animation: slideInFromLeft 0.34s ease forwards; }
+    .page.exit-back { animation: slideOutToRight 0.34s ease forwards; z-index: 1; }
+
+    @keyframes slideInFromRight {
+      from { opacity: 0; transform: translateX(56px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideOutToLeft {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-56px); }
+    }
+
+    @keyframes slideInFromLeft {
+      from { opacity: 0; transform: translateX(-56px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideOutToRight {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(56px); }
+    }
+
+    .title {
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+      color: #ffffff;
+      text-shadow: 0 8px 28px rgba(132, 110, 255, 0.28);
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.82);
+      text-align: center;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .logo-btn {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.22s ease, filter 0.22s ease;
+    }
+
+    .logo-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      filter: drop-shadow(0 0 24px rgba(166, 143, 255, 0.35));
+    }
+
+    .logo-trace {
+      width: min(74vw, 560px);
+      max-width: 100%;
+      display: block;
+      filter: drop-shadow(0 18px 38px rgba(149, 120, 255, 0.24));
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .credit-text {
+      margin: -8px 0 0 0;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: rgba(255, 255, 255, 0.92);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .menu-stack {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-btn {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      cursor: pointer;
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+      box-shadow: 0 16px 38px rgba(16, 10, 40, 0.32);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      opacity: 1;
+      filter: brightness(1.07);
+      box-shadow: 0 20px 42px rgba(115, 88, 255, 0.34);
+    }
+
+    .nav-btn:active,
+    .hex-btn:active,
+    .logo-btn:active,
+    .back-btn:active,
+    .tool-btn:active,
+    .quiz-start-btn:active,
+    .quiz-nav-btn:active,
+    .waste-next-btn:active,
+    .waste-tab-btn:active,
+    .emergency-btn:active {
+      transform: scale(0.98);
+    }
+
+    .small-btn {
+      width: 220px;
+      height: 64px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #7d52ff 0%, #5d8dff 100%);
+      font-size: 1rem;
+    }
+
+    .big-btn {
+      width: min(90vw, 430px);
+      height: 96px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #7b58ff 0%, #5778ff 100%);
+      font-size: 1.5rem;
+    }
+
+    .main-lab-btn {
+      width: min(92vw, 500px);
+      height: 112px;
+      font-size: 1.7rem;
+      border-radius: 30px;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 1000;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: rgba(130, 98, 255, 0.18);
+      color: #ffffff;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 24px rgba(15, 8, 36, 0.34);
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(130, 98, 255, 0.28);
+      box-shadow: 0 16px 30px rgba(115, 88, 255, 0.28);
+    }
+
+    .blank-box {
+      width: min(90vw, 760px);
+      min-height: 320px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(9, 5, 24, 0.28);
+      backdrop-filter: blur(14px);
+    }
+
+    .blank-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .hex-grid {
+      width: min(95vw, 900px);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      justify-items: center;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .hex-btn {
+      width: 190px;
+      height: 210px;
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      color: white;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+      background: linear-gradient(135deg, #6f4fff 0%, #4f74ff 100%);
+      box-shadow: 0 16px 34px rgba(12, 7, 30, 0.34);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.22s ease, filter 0.22s ease, box-shadow 0.22s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.35;
+      backdrop-filter: blur(10px);
+    }
+
+    .hex-btn:hover {
+      transform: translateY(-5px) scale(1.02);
+      filter: brightness(1.08);
+      box-shadow: 0 20px 40px rgba(115, 88, 255, 0.34);
+    }
+
+    .pair-wrap {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .pair-btn {
+      width: min(42vw, 240px);
+      min-width: 170px;
+      height: 90px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #7b58ff 0%, #567dff 100%);
+      font-size: 1.2rem;
+    }
+
+    #tool-intro,
+    #waste-disposal,
+    #emergency,
+    #othernotes,
+    #sample-experiments,
+    #media-culture {
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 72px;
+      padding-bottom: 28px;
+      overflow-y: auto;
+    }
+
+    .tool-search-wrap {
+      width: min(92vw, 980px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .tool-search {
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      font-size: 1rem;
+      outline: none;
+      box-shadow: 0 12px 28px rgba(9, 5, 24, 0.2);
+    }
+
+    .tool-search::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .tool-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .tool-btn {
+      width: 100%;
+      min-height: 74px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(135deg, rgba(120, 88, 255, 0.95) 0%, rgba(86, 125, 255, 0.95) 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+      box-shadow: 0 14px 30px rgba(12, 7, 30, 0.28);
+    }
+
+    .tool-btn:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.08);
+      box-shadow: 0 18px 36px rgba(115, 88, 255, 0.34);
+    }
+
+    .tool-detail {
+      width: 100%;
+      min-height: 320px;
+      padding: 28px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 18px 36px rgba(9, 5, 24, 0.22);
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .tool-detail h2 {
+      margin: 0 0 14px 0;
+      font-size: 1.45rem;
+      color: #ffffff;
+    }
+
+    .tool-empty {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .quiz-card {
+      width: min(92vw, 760px);
+      min-height: 360px;
+      padding: 30px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 18px 40px rgba(9, 5, 24, 0.28);
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: #ffffff;
+    }
+
+    .quiz-start-btn {
+      width: min(90vw, 430px);
+      min-height: 88px;
+      border-radius: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: linear-gradient(135deg, #7b58ff 0%, #567dff 100%);
+      color: #ffffff;
+      font-size: 1.22rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 18px 38px rgba(16, 10, 40, 0.32);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    }
+
+    .quiz-start-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      filter: brightness(1.08);
+      box-shadow: 0 22px 44px rgba(115, 88, 255, 0.34);
+    }
+
+    .quiz-progress {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .quiz-question {
+      font-size: 1.28rem;
+      font-weight: 800;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .quiz-option {
+      width: 100%;
+      padding: 15px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      text-align: left;
+      font-size: 1rem;
+      line-height: 1.45;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .quiz-option:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 12px 26px rgba(115, 88, 255, 0.22);
+    }
+
+    .quiz-option.selected {
+      background: linear-gradient(135deg, rgba(140, 105, 255, 0.95) 0%, rgba(80, 126, 255, 0.95) 100%);
+      border-color: rgba(255, 255, 255, 0.42);
+      box-shadow: 0 14px 30px rgba(115, 88, 255, 0.32);
+    }
+
+    .quiz-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .quiz-nav-btn {
+      flex: 1;
+      min-height: 54px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+    }
+
+    .quiz-nav-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .quiz-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .quiz-result-title {
+      font-size: 1.7rem;
+      font-weight: 900;
+      margin: 0 0 12px 0;
+      color: #ffffff;
+    }
+
+    .quiz-score {
+      font-size: 1rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.78);
+      margin-bottom: 18px;
+    }
+
+    .quiz-result-text {
+      font-size: 1.12rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.92);
+      white-space: pre-line;
+    }
+
+    .waste-card {
+      width: min(92vw, 900px);
+      min-height: 260px;
+      padding: 30px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 18px 40px rgba(9, 5, 24, 0.28);
+      backdrop-filter: blur(14px);
+      color: rgba(255, 255, 255, 0.92);
+      line-height: 1.75;
+      white-space: pre-line;
+    }
+
+    .emergency-detail {
+      width: min(92vw, 900px);
+      height: auto;
+      min-height: fit-content;
+      padding: 30px;
+      margin-bottom: 40px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 18px 40px rgba(9, 5, 24, 0.28);
+      backdrop-filter: blur(14px);
+      color: rgba(255, 255, 255, 0.92);
+      line-height: 1.75;
+      white-space: pre-line;
+      overflow: visible;
+      overflow-wrap: break-word;
+      word-break: keep-all;
+    }
+
+    .waste-card h2,
+    .emergency-detail h2 {
+      margin: 0 0 14px 0;
+      color: #ffffff;
+      font-size: 1.55rem;
+    }
+
+    .emergency-content {
+      display: block;
+      width: 100%;
+      white-space: pre-line;
+      overflow-wrap: break-word;
+      word-break: keep-all;
+    }
+
+    .waste-next-btn {
+      width: min(90vw, 320px);
+      min-height: 62px;
+      margin-top: 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: linear-gradient(135deg, #7b58ff 0%, #567dff 100%);
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 16px 34px rgba(16, 10, 40, 0.32);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    }
+
+    .waste-next-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      filter: brightness(1.08);
+      box-shadow: 0 20px 40px rgba(115, 88, 255, 0.34);
+    }
+
+    .waste-tab-wrap {
+      width: min(92vw, 900px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .waste-tab-btn,
+    .emergency-btn {
+      min-height: 70px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      background: linear-gradient(135deg, rgba(120, 88, 255, 0.96) 0%, rgba(86, 125, 255, 0.96) 100%);
+      color: #ffffff;
+      font-weight: 850;
+      font-size: 1.08rem;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+      box-shadow: 0 14px 30px rgba(12, 7, 30, 0.28);
+    }
+
+    .waste-tab-btn:hover,
+    .emergency-btn:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.08);
+      box-shadow: 0 18px 36px rgba(115, 88, 255, 0.34);
+    }
+
+    .waste-tab-btn.active {
+      border-color: rgba(255, 255, 255, 0.52);
+      box-shadow: 0 18px 38px rgba(140, 105, 255, 0.42);
+      filter: brightness(1.1);
+    }
+
+    .emergency-list {
+      width: min(92vw, 760px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .emergency-btn {
+      width: 100%;
+      text-align: left;
+      padding: 18px 20px;
+    }
+
+    body.device-desktop .app {
+      max-width: 1200px;
+    }
+
+    body.device-mobile {
+      padding: 0;
+      align-items: flex-start;
+    }
+
+    body.device-mobile .app {
+      max-width: 430px;
+      min-height: 100dvh;
+    }
+
+    body.device-mobile .page {
+      min-height: 100dvh;
+      padding: 82px 18px 36px;
+      justify-content: flex-start;
+    }
+
+    body.device-mobile .logo-trace {
+      width: min(84vw, 340px);
+      margin-top: 110px;
+    }
+
+    body.device-mobile .menu-stack {
+      gap: 16px;
+    }
+
+    body.device-mobile .small-btn,
+    body.device-mobile .big-btn,
+    body.device-mobile .pair-btn {
+      width: 100%;
+      max-width: 340px;
+      min-width: 0;
+    }
+
+    body.device-mobile .big-btn {
+      height: 82px;
+      font-size: 1.25rem;
+    }
+
+    body.device-mobile .main-lab-btn {
+      height: 96px;
+      font-size: 1.42rem;
+    }
+
+    body.device-mobile .pair-wrap {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body.device-mobile .hex-grid {
+      grid-template-columns: 1fr;
+      width: 100%;
+    }
+
+    body.device-mobile .hex-btn {
+      width: min(78vw, 260px);
+      height: 180px;
+    }
+
+    body.device-mobile .tool-search-wrap,
+    body.device-mobile .tool-search,
+    body.device-mobile .emergency-list,
+    body.device-mobile .emergency-detail {
+      width: 100%;
+    }
+
+    body.device-mobile .tool-grid {
+      grid-template-columns: 1fr;
+    }
+
+    body.device-mobile .tool-btn {
+      min-height: 68px;
+      font-size: 1rem;
+    }
+
+    body.device-mobile .tool-detail,
+    body.device-mobile .quiz-card,
+    body.device-mobile .waste-card,
+    body.device-mobile .emergency-detail {
+      width: 100%;
+      height: auto;
+      max-height: none;
+      min-height: fit-content;
+      padding: 20px;
+      font-size: 0.95rem;
+      border-radius: 22px;
+      overflow: visible;
+    }
+
+    body.device-mobile .quiz-start-btn {
+      width: 100%;
+      max-width: 340px;
+      min-height: 82px;
+      font-size: 1.08rem;
+    }
+
+    body.device-mobile .quiz-controls {
+      flex-direction: column;
+    }
+
+    body.device-mobile .waste-tab-wrap {
+      width: 100%;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    body.device-mobile .waste-tab-btn,
+    body.device-mobile .emergency-btn {
+      min-height: 64px;
+      font-size: 1rem;
+    }
+
+    body.device-mobile .back-btn {
+      top: 14px;
+      left: 14px;
+      padding: 10px 15px;
+    }
+
+    @media (max-width: 860px) {
+      .hex-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .hex-btn {
+        width: 170px;
+        height: 190px;
+        font-size: 0.98rem;
+      }
+
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hex-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .big-btn {
+        font-size: 1.25rem;
+        height: 82px;
+      }
+
+      .small-btn {
+        width: 180px;
+        height: 58px;
+      }
+
+      .pair-btn {
+        width: 80vw;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="back-btn" id="backBtn" style="display:none;">← 뒤로</button>
+
+  <div class="app">
+    <section class="page active" id="front">
+      <p class="subtitle">로고를 클릭하여 시작</p>
+      <button class="logo-btn" onclick="showPage('device-select')" aria-label="기기 선택 화면 열기">
+        <svg class="logo-trace" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="인연 로고">
+          <g fill="#ffffff">
+            <circle cx="600" cy="320" r="47" />
+            <circle cx="1048" cy="320" r="47" />
+            <rect x="570" y="405" width="48" height="205" rx="1" />
+            <rect x="570" y="610" width="492" height="50" rx="1" />
+            <rect x="795" y="285" width="48" height="375" rx="1" />
+            <rect x="843" y="470" width="230" height="50" rx="1" />
+            <rect x="843" y="585" width="230" height="50" rx="1" />
+            <polygon points="843,340 1100,410 1100,460 843,390" />
+            <rect x="1073" y="410" width="48" height="250" rx="1" />
+          </g>
+        </svg>
+      </button>
+      <div class="credit-text">
+        <div>web made by 인연 15기</div>
+        <div><strong>이찬빈</strong>, 박유빈, 김서연, 서용준, 오연서, 이서진, 이태훈A, 이태훈B, 임가연, 조윤영</div>
+      </div>
+    </section>
+
+    <section class="page" id="device-select">
+      <h1 class="title">접속 기기 선택</h1>
+      <p class="subtitle">사용 중인 화면에 맞게 UI를 조절합니다.</p>
+      <div class="pair-wrap">
+        <button class="nav-btn pair-btn" onclick="selectDevice('desktop')">노트북</button>
+        <button class="nav-btn pair-btn" onclick="selectDevice('mobile')">핸드폰</button>
+      </div>
+    </section>
+
+    <section class="page" id="main-menu">
+      <h1 class="title">메인 메뉴</h1>
+      <div class="menu-stack">
+        <button class="nav-btn small-btn" onclick="showPage('jeongbyeong')">정병테스트</button>
+        <button class="nav-btn big-btn main-lab-btn" onclick="showPage('lab-rules')">실험실 수칙</button>
+      </div>
+    </section>
+
+    <section class="page" id="jeongbyeong">
+      <h1 class="title">정병테스트</h1>
+      <div id="quizStartBox">
+        <button class="quiz-start-btn" onclick="startQuiz()">다음 질문에 순서대로 답하기 ㄱㄱ</button>
+      </div>
+      <div id="quizBox" class="quiz-card" style="display:none;">
+        <div id="quizProgress" class="quiz-progress"></div>
+        <p id="quizQuestion" class="quiz-question"></p>
+        <div id="quizOptions" class="quiz-options"></div>
+        <div class="quiz-controls">
+          <button id="quizPrevBtn" class="quiz-nav-btn" onclick="changeQuestion(-1)">Previous</button>
+          <button id="quizNextBtn" class="quiz-nav-btn" onclick="changeQuestion(1)">Next</button>
+        </div>
+      </div>
+      <div id="quizResultBox" class="quiz-card" style="display:none;"></div>
+    </section>
+
+    <section class="page" id="lab-rules">
+      <h1 class="title">실험실 수칙</h1>
+      <div class="hex-grid">
+        <button class="hex-btn" onclick="showPage('othernotes')">주의사항</button>
+        <button class="hex-btn" onclick="showPage('tool-intro')">기구소개</button>
+        <button class="hex-btn" onclick="showPage('waste-disposal')">폐시약처리법</button>
+        <button class="hex-btn" onclick="showPage('media-culture')">배지배양법</button>
+        <button class="hex-btn" onclick="showPage('emergency')">실험실 응급상황 시 대처법</button>
+        <button class="hex-btn" onclick="showPage('sample-experiments')">예시실험</button>
+      </div>
+    </section>
+
+    <section class="page" id="othernotes">
+      <h1 class="title">주의사항</h1>
+      <div class="tool-search-wrap">
+        <div class="tool-detail">1) 실험하기 전에 실험계획서를 꼼꼼하게 작성하고, 실험 방법을 숙지한 뒤 제출한다.
+실험실 사용 신청서와 같은 경우는, 전날 16시까지 제출한다.
+계획서는 꼼꼼하게 작성하며, 필요한 실험 준비물 같은 경우 계획서에 모두 기재하도록한다.
+폐수처리법은 숙지하여 실험을 진행하며, 화학 선생님께 미리 검사를 받은 뒤 실험에 임하도록 한다.
+
+2) 실험 종사자는 실험복 및 장갑을 착용하고 실험 위해도 등급에 따라 적합한 개인보호구를 선택하여 착용한다.
+실험복과 장갑은 실험 수행 시 항상 착용하고 올바른 탈의 / 착용방법을 숙지한다.
+화장실, 면학실, 교실등 일반구역의 출입시에는 실험복, 장갑 등을 벗고 이동한다.
+균을 사용하는 실험과 같은 경우는 필수적으로 장갑을 사용한다.
+
+3) 교사의 지시 없이 함부로 시약의 맛을 보아서는 안 되며, 시약의 냄새를 맡고자 할 때에는 손으로 부채질을 하며 소량을 맡는다.
+4) 불을 다룰 때에는 불이 붙기 쉬운 물질을 가까이 놓지 않도록 한다.
+5) 냄새가 좋지 않은 기체가 발생하는 실험인 경우에는 환기가 잘 되는 곳에서 실험을 한다.
+6) 실험 중에 추가적으로 필요한 실험기구나 시약은 선생님께 요청하여 추가로 받는다.
+7) 약품은 적당량 사용을 하고 시약병에서 꺼낸 시약은 다시 시약병에 넣지 않는다.
+8) 9시 이전에 실험을 끝내고 뒷정리까지 모두 완료되어 있어야 하는 것이 원칙이다.
+9) 실험이 끝난 후에는 실험대를 정리, 소독한다.
+10) 실험 중 오염사고가 발생한 경우, 즉시 실험실 담당 선생님께 보고하고 소독 등의 적합한 조치를 취한다.
+11) 실험 종료후, 그리고 실험실을 나올때에는 반드시 손을 씻는다.
+12) 지정된 실험 구역에서는 음식 섭취, 식품보존, 화장 행위등을 금한다.
+13) 실험실 사용 학생은 실험실 안전을 위하여 실험실 안전 수칙을 준수한다.</div>
+      </div>
+    </section>
+
+    <section class="page" id="tool-intro">
+      <h1 class="title">기구소개</h1>
+      <div class="tool-search-wrap">
+        <input id="toolSearchInput" class="tool-search" type="text" placeholder="기구 이름 검색" />
+        <div id="toolButtonGrid" class="tool-grid"></div>
+        <div id="toolDetail" class="tool-detail">
+          <div class="tool-empty">아래 기구 버튼을 클릭하면 설명이 여기에 표시됩니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="waste-disposal">
+      <h1 class="title">폐시약처리법</h1>
+      <div id="wasteIntroBox" class="waste-card">
+        <h2>폐수처리통</h2>
+위치: 화학실, 과학탐구실
+분류: 산, 염기, 유기, 무기
+산:
+
+실험실 사용하기 전에 사용하는 모든 물질의 폐수/폐기 처리 방법을 알아야 함!
+→ 조사하지 않으면:
+실험실 선생님께 혼남
+생민정 선생님께 혼남
+모두에게 혼남
+실험 진행 지체
+안전상의 문제
+
+사고가 발생할 때에는 우선 실험실 선생님께 무조건 먼저 말씀드린다! (아래의 내용은 참고 사항이다)
+
+        <button class="waste-next-btn" onclick="showWasteTabs()">NEXT</button>
+      </div>
+
+      <div id="wasteTabsBox" style="display:none;">
+        <div class="waste-tab-wrap">
+          <button class="waste-tab-btn" onclick="showWasteDetail('organic')">유기</button>
+          <button class="waste-tab-btn" onclick="showWasteDetail('inorganic')">무기</button>
+          <button class="waste-tab-btn" onclick="showWasteDetail('acid')">산</button>
+          <button class="waste-tab-btn" onclick="showWasteDetail('base')">염기</button>
+        </div>
+      </div>
+
+      <div id="wasteDetailBox" class="waste-card" style="display:none;"></div>
+    </section>
+
+    <section class="page" id="media-culture">
+      <h1 class="title">배지배양법</h1>
+      <div class="tool-search-wrap">
+        <div class="tool-detail">
+          <h2>배지배양법 참고 링크</h2>
+          아래 링크를 클릭하면 미생물 배지 관련 참고 자료로 이동합니다.
+
+          <a href="https://www.sigmaaldrich.com/KR/ko/technical-documents/technical-article/cell-culture-and-cell-culture-analysis/microbial-cell-culture/microbial-media?srsltid=AfmBOoqYFVnMZrFyIbfUc3AXXUxNI4CHBkGY9eA3AjBhIaYx0" target="_blank" rel="noopener noreferrer" style="color:#ffffff; font-weight:800; text-decoration:underline; word-break:break-all;">
+            Sigma-Aldrich 미생물 배지 자료 바로가기
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="emergency">
+      <h1 class="title">실험실 응급상황 시 대처법</h1>
+      <div class="emergency-list">
+        <button class="emergency-btn" onclick="showEmergencyDetail('chemical')">1. 화학물질노출</button>
+        <button class="emergency-btn" onclick="showEmergencyDetail('fire')">2. 화재 및 폭발</button>
+        <button class="emergency-btn" onclick="showEmergencyDetail('wound')">3. 상처 및 출혈</button>
+        <button class="emergency-btn" onclick="showEmergencyDetail('electric')">4. 감전사고</button>
+        <button class="emergency-btn" onclick="showEmergencyDetail('coldburn')">5. 저온화상</button>
+      </div>
+      <div id="emergencyDetailBox" class="emergency-detail" style="display:none;"></div>
+    </section>
+
+    <section class="page" id="sample-experiments">
+      <h1 class="title">예시실험</h1>
+      <div class="tool-search-wrap">
+        <div class="tool-detail">2025년도 실험실(화학실) 사용 신청서 예시
+
+사용 일시
+2025년 11월 21일 금요일 19시 00분 ~ 21시 00분
+
+사용 학생
+이찬빈 외 3인
+※ 실제 제출 시에는 각자 고유학번, 이름, 연락처를 기입한다.
+
+실험 계획
+
+1. 알긴산나트륨의 50%를 Sodium Periodate와 반응시켜 알데하이드기를 가진 산화 알긴산으로 변환시키고, 나머지 50%는 알긴산나트륨으로 그대로 유지한다.
+
+2. Na-Alginate 1.0% (w/v) 수용액과 CaCl₂ 10mM를 1:1 부피비로 섞어주어 Ca-Na-Alginate 용액을 준비한다.
+
+3. Ox-Alginate 1.0% (w/v) 수용액과 젤라틴 2.0% (w/v)를 1:1 부피비로 섞어주어 Gel-Ox-Alginate 용액을 준비한다.
+
+4. Ca-Na-Alginate와 Gel-Ox-Alginate의 조성비(부피비 기준)가 다른 5가지 용액을 준비한다.
+(1) Ca-Na-Alginate 100%, Gel-Ox-Alginate 0%
+(2) Ca-Na-Alginate 75%, Gel-Ox-Alginate 25%
+(3) Ca-Na-Alginate 50%, Gel-Ox-Alginate 50%
+(4) Ca-Na-Alginate 25%, Gel-Ox-Alginate 75%
+(5) Ca-Na-Alginate 0%, Gel-Ox-Alginate 100%
+
+5. DW 500mL, Glycerol 25%, CaCl₂ 0.133g으로 인공 모사 혈액을 형성한다. (선행연구 기준)
+
+6. 5에서 형성한 용액 90mL을 페트리 접시에 배치한 다음, Syringe 혹은 분사기로 4에서 만든 (1)~(5) 용액을 15mL 투여하여 용액이 접시 상단면에 퍼지도록 한다.
+
+7. 각 실험 경우((1)에서 (5)까지 총 5가지 경우)에 대하여, 몇 분의 시간이 지나야 페트리 접시 표면에 겔이 완전히 형성되는지 확인한다.
+
+8. 완성된 겔을 실린더에 넣은 후, 50g 추를 상단 표면에 올린 다음 줄어든 높이를 확인한다. 이를 통해 firmness, 즉 겔의 형성 강도를 확인한다.
+
+9. 얼마나 빠르게 형성되는지, 즉 시간이 적게 걸리는지를 지표 A로 두고, 하이드로겔의 firmness를 지표 B로 둔다. 이후 A와 B의 곱이 가장 높은 실험군을 선택한다. 이는 빠르면서도 하이드로겔이 안정적인 인장력을 가지고 형성되는 정도를 수치화하기 위한 방식이다.
+
+필요 기구 및 필요 시약
+
+1. Sodium Alginate (s) 최소 50g
+2. CaCl₂ [Calcium Chloride, 5%, aq] 최소 60mL
+3. Gelatin Powder (s) 최소 20g
+4. DW (l) 최소 300mL
+5. Glycerin, 99% (aq) 최소 50mL
+6. 스포이드 8개
+7. 교반기 + magnetic bar
+8. 전자저울
+9. 약포지 다수
+10. 유리 막대 2개
+11. 100mL 비커 4개
+12. 500mL 비커 2개
+13. 페트리 접시 5개
+14. 10g 추 2개
+15. 100mL 눈금실린더 2개
+16. 10mL 눈금실린더 2개
+17. NaIO₄, 5% 과요오드산나트륨 용액
+18. 핀셋 2개
+
+학생 서명 관련 확인 사항
+
+실험실 사용 시 주의사항을 모두 숙지하였으며, 다음 사항이 확인될 경우 조원 전체가 한 달간(방학 제외) 실험실 사용이 금지되고, 사안에 따라 기기의 변상 조치가 이루어질 수 있음에 동의한다.
+
+① 실험실에서 실험 외 다른 활동 진행
+② 실험실 내 음식물 반입
+③ 실험실 기기 및 초자 정리 미이행
+④ 실험실 외부로 장소 이동
+⑤ 보호 장구 미착용 및 안전 수칙 위반
+⑥ 신청서에 기록되지 않은 기기·시약 사용
+⑦ 실험실 기물 파손
+⑧ 시약 및 폐수의 잘못된 처리
+
+지도교사 서명란
+실험에 대한 필요성을 확인하였고, 실험실 기기 훼손 및 정리 미이행에 대하여 책임지겠습니다.
+
+실험실 담당교사 서명란
+학생들의 실험에 대한 필요성을 확인하였고, 안전사고교육, 실험기기 사용능력을 확인하였습니다.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const historyStack = ['front'];
+    let currentPageId = 'front';
+    let isTransitioning = false;
+
+    const toolData = [
+      {
+        name: '생물안전작업대',
+        description: `실험자와 샘플을 모두 보호해주는 기구로, 안에 있는 공기를 필터링해서 바깥으로 내보내는 작업을 해주는 기구입니다. 안이 오염될 경우, 다음 사람의 실험에 문제가 생길 수 있으니 유의해야 합니다.
+
+사용 방법
+사용 시에는 쇠로 된 손잡이를 올려 위쪽의 표시된 부분(a)까지 올려줍니다.
+(b) 구역에 있는 붉은색 불빛이 둘 다 푸른색이 되도록 기다린 후 실험을 진행합니다.
+안에 들어있는 것은 멸균 상태이므로 그대로 사용할 수 있으며, 생물안전작업대 밖에 있는 기구를 사용하고자 할 때는 페이퍼타올에 바이오크린콜(소독용 알코올)을 뿌려 닦은 후 사용합니다.
+손은 꼭 장갑을 끼고 알코올로 소독한 후 멸균 상태를 확인한 이후 자리에 앉습니다.
+안에서 실험을 진행할 때는 받침대에 팔을 얹은 상태로 진행하며, 환풍구를 막지 않도록 조심합니다.
+실험이 끝나면 사용한 기구는 모두 바깥으로 빼고, 다음 사용자를 위해 알코올을 뿌리고 키친타올 등으로 내부를 닦아줍니다. 그 후 원래 상태로 덮개를 내려주고 UV를 켜서 소독이 되도록 합니다.
+뒷정리 후에는 옆에 있는 서류에 사용한 시간, 학번, 이름, 목적 등을 양식에 맞추어 쓰고 실험을 마칩니다.`
+      },
+      {
+        name: '저온BOC배양기',
+        description: `사용 목적
+고체 배양기는 한천(agar) 배지를 담은 페트리 접시에 미생물을 접종한 뒤, 이를 인큐베이터에서 일정한 온도로 배양하여 콜로니 형태로 성장시키는 장치입니다. 이를 통해 미생물을 분리하고 관찰할 수 있습니다.
+
+사용 시 유의
+접시를 뒤집어 배양하여 수분이 떨어지는 것을 방지하고, 무균 상태를 유지해 오염을 막아야 합니다.
+
+사용 방법
+배양할 생물의 보관 적정 온도 등을 잘 숙지한 뒤 선생님께 요청드립니다.
+
+대표 실험
+대장균 배양
+항생제 감수성 실험`
+      },
+      {
+        name: '분젠버너',
+        description: `사용 목적
+과학 실험실에서 화학 반응을 촉진하거나 물질을 멸균할 때 주로 사용하는 가스버너입니다.
+
+구성부품
+가스 조절 밸브: 들어오는 가스의 양을 조절하여 불꽃의 크기를 키우거나 줄입니다.
+공기 조절 링: 구멍을 열고 닫아 산소 유입량을 조절합니다.
+통(버너 튜브): 가스와 공기가 섞여서 위로 올라가는 기둥입니다.
+
+실험 시 멸균 환경을 유지하기 위해서 주로 사용되며, 실험에 사용되는 배지 등을 15cm 내에서 조작합니다.
+밸브를 통해 끄고 켤 수 있지만 원칙적으로는 학생이 건드리지 않고 실험실 선생님께 말씀드리도록 합니다.`
+      },
+      {
+        name: '오토클레이브',
+        description: `사용 목적
+고온 고압 멸균에 사용합니다.
+
+사용 방법
+선생님이 진행합니다.
+
+유의 사항
+사용 시 반드시 선생님께 부탁드립니다.
+오토클레이브 사용 가능한 용기인지 확인해야 합니다.
+멸균에 필요한 압력 및 온도를 사전에 확인한 후 선생님께 말씀드립니다.
+절대 직접 손대지 않습니다.
+멸균 후 온도와 압력이 내려갈 때까지 기다린 뒤 선생님께 말씀드립니다.
+
+대표 실험
+배지 제작
+실험 기구 멸균(고온 고압 유지 가능한 유리만 가능)`
+      },
+      {
+        name: '마이크로피펫',
+        description: `사용 목적
+정해진 용량의 액체를 옮길 때 사용합니다.
+
+사용 방법
+최대 용량이 1000uL, 200uL, 20uL, 10uL인 종류로 구분되며, 각 실험의 목적에 맞는 기구를 선정해서 사용합니다.
+
+1. 다이얼로 추출할 용액의 부피를 설정합니다.
+2. 피펫팁을 용액에 넣은 상태로 플런저(누름 버튼)를 1단(저항이 느껴지는 곳)까지 눌러 액체를 흡입한 뒤, 피펫 팁을 용액에서 뺍니다.
+3. 옮길 용기에 플런저를 2단(완전히 끝까지 눌리는 곳)까지 눌러 완전히 배출합니다.
+4. 팁 이젝터(손잡이 부분의 버튼)를 끝까지 눌러 사용한 팁을 폐기합니다.`
+      },
+      {
+        name: '항온수조',
+        description: `특정 화학 반응을 위해 일정한 온도(보통 실온보다 높은 온도)를 유지해야 할 때 사용합니다.
+
+사용 방법
+A. 옆에 있는 스위치를 켭니다.
+B. 옆에 있는 버튼을 이용해 목표 온도를 설정합니다.
+C. 온도가 목표 온도까지 올라갈 동안 기다립니다.
+D. 뚜껑을 열고 원하는 시약이 들어간 튜브를 넣습니다.
+- 뚜껑 및 금속 부분, 수증기가 매우 뜨거우므로 두꺼운 장갑을 꼭 끼고 작업해야 합니다.
+- 뚜껑 안쪽의 물방울은 조심스럽게 다시 수조로 옮겨야 합니다.
+- 마이크로튜브는 스펀지 튜브 랙에 끼워 넣습니다.
+- 코니컬 튜브 사용 시 뚜껑이 완전히 닫히지 않을 수 있으니 주의합니다.
+E. 원하는 시간만큼 온도를 유지한 후 튜브를 꺼내면 됩니다.`
+      },
+      {
+        name: '전기영동장치',
+        description: `사용 목적
+단백질이나 DNA를 크기별로 분리할 때 사용합니다.
+
+사용 방법
+
+A. 아가로스 젤 만드는 법(DNA 전기영동에 사용)
+1. 1X TAE buffer 40mL와 agarose 0.4g을 넣고 섞습니다.
+2. 이를 삼각플라스크에 넣고 랩으로 입구를 잘 막은 다음, 랩에 구멍 몇 개를 뚫고 전자레인지에 1분 30초 동안 돌립니다.
+3. 삼각플라스크에 Greenstar 시약을 200uL 넣고 잘 섞은 다음, DNA 전기영동 틀에 붓습니다.
+4. 20분 동안 젤을 굳힙니다.
+
+B. 젤 running 하는 법
+1. 젤의 well이 전기영동 탱크의 음극 쪽에 위치하도록 젤을 넣습니다.
+2. 젤이 잠기도록 1X TAE buffer를 붓고, 젤의 well에 원하는 DNA를 넣습니다. 이때 넣는 DNA 시료의 농도를 적절히 조절해야 하고, 전체 넣는 용량의 1/6 부피의 6X Loading Dye를 넣습니다. 또한 젤의 맨 첫 번째 well에는 보통 DNA ladder를 넣습니다.
+3. 전원장치에 전기영동장치를 연결합니다.
+4. 보통 1시간 정도 젤을 내립니다.
+
+C. 전기영동 확인하는 방법
+1. 젤을 전기영동장치에서 빼내고, UV illuminator에 넣습니다.
+2. 일루미네이터의 뚜껑을 덮고 불을 끕니다.
+3. 자외선으로 표지된 DNA를 관찰합니다.
+
+대표 실험
+단백질 전기영동 실험`
+      },
+      {
+        name: '제빙기',
+        description: `사용 목적
+얼음을 보관하는 기구로, 얼음을 통해 온도를 낮추는 과정이 필요한 실험에서 사용합니다.
+
+사용 방법
+얼음이 필요한 실험의 경우 선생님께 말씀드립니다.
+
+대표 실험
+핵산 추출 실험`
+      },
+      {
+        name: '원심분리기',
+        description: `1730R Centrifuge 원심분리기
+
+사용 목적
+원심분리기는 회전력을 이용하여 액체 또는 고체 입자들을 밀도 차이에 따라 분리하는 장비입니다. 다양한 분야에서 사용되며 입자의 크기, 밀도, 모양, 점성 등을 기준으로 시료를 분리합니다.
+
+사용 방법
+A. 전원을 켭니다: 뒤 전원에 있는 케이블을 연결합니다.
+B. 샘플을 넣습니다.
+- 반드시 대칭으로 샘플을 넣어서 무게중심이 가운데에 오도록 합니다.
+- 대칭으로 배치하지 않을 경우 기기 파손과 샘플 손실 위험이 있습니다.
+C. 속도 설정(RPM)
+- RPM은 분당 회전 수입니다.
+- 실험마다 사용 RPM이 다릅니다.
+D. 시간 설정: TIME 버튼을 눌러 화살표로 시간을 분과 초 단위로 조정합니다.
+E. 온도 설정(필요시)
+F. 회전을 시작합니다.
+G. 완료 후 stop 버튼을 누르고 회전이 감속하여 완전히 멈춘 뒤 뚜껑을 엽니다.
+- 샘플 제거
+- 내부 물기 제거
+- 로터 닦기
+- 뚜껑 열어서 건조
+
+기타
+논문을 참고할 때 RPM이 아닌 RCF(g) 단위를 사용하는 경우가 많으므로 단위 변환이 필요할 수 있습니다.`
+      }
+    ];
+
+    const quizData = [
+      {
+        question: '집에 가고 싶다는 생각이 얼마나 자주 드나요?',
+        options: ['1달에 1번', '일주일에 1번', '3일에 1번', '매일 1번', '학교 안나오고 싶어요']
+      },
+      {
+        question: '교칙 (라면 배달음식 등등)을 깨고 싶다는 충동이 하루에 몇번 드나요?',
+        options: ['모든 날 모든 순간', '룸메들을 볼 때마다', '1인2기 할 때', '하루에 1번', '저는 선량한 시민입니다']
+      },
+      {
+        question: '시험 며칠 전부터 환청과 환각 증세가 나타나나요?',
+        options: ['그런거 없어용 ^^', '잠에 들 때마다 누군가 속삭거려요 셤공부하라고', '매 순간 교과서가 눈앞에 아른거려요', '쌤들 얼굴 볼때마다?', '헤헤...해탈했어요']
+      },
+      {
+        question: '학교 내 CC에 대해 어떻게 생각하나요?',
+        options: ['별 관심 없어요', '별로긴 하죠...', '저는 CCC (campus couple cutter)입니다만?', '화가 난다', '내가 곧 CC다']
+      },
+      {
+        question: '인연 동아리에 대해 어떻게 생각하나요?',
+        options: ['인연 없이는 못살아!', '사랑해요', '훌륭한 동아리죠', '좋은 동아리죠', '그냥 친구들이 있는 동아리죠']
+      }
+    ];
+
+    let quizCurrentIndex = 0;
+    let quizAnswers = Array(quizData.length).fill(null);
+
+    const wasteData = {
+      organic: {
+        title: '유기',
+        text: `자주 사용하는 유기 물질:
+메탄올 (methanol, CH3OH)
+불 가까이에 두지 않는다 (휘발성이 강하고 가연성이 큼)
+에탄올 (ethanol, C2H5OH)
+아세톤 (acetone, CH3COCH3)
+파라디클로로벤젠 (p-dichlorobenzene, C6H4Cl2)
+나프탈렌 (naphthalene, C10H8)
+과산화수소(hydrogen peroxide, H2O2)
+포름알데히드(formaldehyde, HCHO)
+액체 질소(liquid nitrogen, N2,)
+
+유기 물질의 폐기법:
+휘발성 유기 물질은 소량일 경우(500mL 이하) 후드 안에서 증발시켜 폐기한다. 양이 많을 때 선생님께 문의 후 적절 희석 후 폐기.
+학교 실험실에서는 액체 폐기물을 따로 모은다.`
+      },
+      inorganic: {
+        title: '무기',
+        text: `중금속, 중금속 화합물: 납(Pb), 황산구리(CuSO45H2O), 아연(Zn), 크롬(Cr),
+
+중금속 화합물의 폐기물 처리법: 중금속 화합물의 폐기물 처리
+폐수를 그냥 하수도에 버리지 않도록 지시한다
+실험실 선생님의 지시에 따라 수거한다
+시험관을 헹군 물도 반드시 폐수통에 버려야 한다.
+절대 매립하기, 태우기, 하수로 흘려보내지 않기
+
+알칼리 금속:
+나트륨
+칼륨
+
+알칼리 금속 폐기법(실험실 선생님께 먼저 문의):
+알칼리 금속: 공기와 접촉하지 않도록 석유 에테르 같은 액체 탄화수소에 저장한다.
+폐기시 알코올과 반응시켜 폐기하는 것이 좋다.
+후드 안에서 차단막을 설치하고 반응시킨다.
+알칼리 토금속: 표면에 얇은 금속 산화막이 생겨서 산화가 계속 진행되지 않는다.
+폐기시 물이나 묽은 산과 반응시킨다.
+칼슘과 마그네슘은 물과 반응성이 떨어져, 칼슘은 차가운 물 사용, 마그네슘은 묽은 산 사용
+나트륨, 리튬 처리 방법:
+1) 10~20g 정도로 자른 금속 조각을 500mL 비커에 넣는다. 금속 조각 표면에는 반드시 석유가 약간 묻어 있어야 한다. 자석 교반기나 유리막대를 사용하여 혼합물 만든다.
+2) 에탄올을 조금씩 천천히 가한다. 수소 기체와 열이 한꺼번에 발생하지 않도록 주의한다. 금속 조각이 모두 녹을 때까지 반응 물질을 잘 저어준다.
+3) 금속이 모두 반응하여 보이지 않게 되면 혼합액과 같은 부피, 의 물을 천천히 붓고 염산을 사용하여 중화시킨다.
+4) 중화된 용액을 20배 정도의 물과 함께 하수구에 흘려보낸다.
+칼륨 처리 방법:
+1) 10~20g 정도로 자른 금속 조각을 500mL 비커에 넣는다. 금속 조각 표면에는 석유가 약간 묻어 있어야 한다. 자석 교반기나 막대를 사용해서 혼합물 만든다.
+2) t-butylalcohol (칼륨 1g당 21mL 이상)을 조금씩 천천히 가한다. 수소 기체와 열이 한꺼번에 발생하지 않도록 주의한다. 금속 조각이 모두 녹을 때까지 반응 물질을 잘 저어준다, 반응 속도가 너무 느리면 무수 에탄올 몇 mL 넣는다.
+3) 금속이 모두 반응하여 보이지 않게 되면 혼합액과 같은 부피의 물을 천천히 붓고 1M HCl을 사용해서 중화시킨다.
+4) 중화된 용액을 20배 정도의 물과 함께 하수구에 흘려보낸다.
+칼슘과 마그네슘 처리 방법:
+1) 찬물 1L 당 금속 칼슘 1~2g 정도 넣는다. 마그네슘은 1M HCl에 넣고, 금속이 완전히 녹을 때까지 저어준다.
+2) 3M 수산화나트륨(NaOH)나 고체 탄산나트륨(Na2CO3) 사용하여 pH 7 부근까지 중화시킨다. (pH 시험지 사용)
+3) 중화된 용액을 20배 정도의 물과 함께 하수구에 흘려보낸다`
+      },
+      acid: {
+        title: '산',
+        text: `산과 염기
+: 일정 비율 이상 희석 / 중화 후에 폐수 처리 (선생님께 확인, 아래 구체적 내용은 참고)
+
+산
+염산(hydrochloric acid, HCl)
+황산(sulfuric acid, H2SO4)
+질산(nitric acid, HNO3)
+아세트산(acetic acid, CH3COOH)
+
+산의 폐기법:
+유기산: 아세트산, 시트르산, 포름산, 젖산 등
+1) 과량의 물(산의 20배 이상)에 산을 조금씩 넣으면서 저어준다.
+2) 희석된 유기산 용액에 수산화나트륨 용액이나 탄산수소나트륨 용액을 부어 중화시키고 pH 시험지로 pH를 점검한다. 고체 산이 모두 녹을 때까지 저어준다.
+3) 이 용액을 과량의 물과 함께 하수구에 버리고 헹군다.
+
+무기산: 염산, 황산, 질산
+무기산은 주오하시켜 하수에 버려도 별다른 문제를 일으키지 않지만, 다음 두 원칙을 반드시 따른다.
+(1) 강한 산을 먼저 1M(또는 10%) 정도의 농도로 희석시킨다. 이때 반드시 물에 산을 가한다.
+(2) 거의 중성이 될 때까지 (pH 5~9) 중화시킨 후 하수구에 버려야 한다. 무기산은 주로 탄산나트륨으로 중화시킨다.
+정석 폐기 방법
+1) 물이 담긴 큰 비커에 산을 조금씩 부어 농도가 1M 이하가 될 때까지 희석시킨다.
+2) 희석된 산 용액에 1M 탄산나트륨 용액을 조금씩 가하면서 저어준다. 이산화탄소 기체가 생성되는데, 중화가 진행될 수록 기체 발생 속도가 떨어진다. 더 이상 기체가 발생하지 않을 때까지 탄산나트륨 용액을 가해 중화시킨다.
+3) 중화된 혼합물을 20배 정도의 충분한 양의 물과 함께 하수구에 흘려보낸다.`
+      },
+      base: {
+        title: '염기',
+        text: `산과 염기
+
+: 일정 비율 이상 희석 / 중화 후에 폐수 처리 (선생님께 확인, 아래 구체적 내용은 참고)
+
+염기
+수산화나트륨(NaOH)
+수산화칼륨(KOH)
+수산화칼슘(Ca(OH)2)
+암모니아수(NH4OH)
+탄산수소나트륨(NaHCO3)
+
+염기의 폐기법: ‘산의 폐기법’과 같이 중화 / 희석 후 폐수처리`
+      }
+    };
+
+    const emergencyData = {
+      chemical: {
+        title: '1. 화학물질노출',
+        text: `산성 물질 노출 (예: 염산, 황산, 질산, 아세트산 등)
+- 증상: 따가움, 화끈거림, 통증, 충혈, 눈물, 피부 발적 등이 나타날 수 있다. 겉으로 보기에는 피부가 붉어지거나 하얗게 변하고, 심한 경우 물집이나 화상을 입을 수 있다.
+- 원인: 산성 물질이 피부나 점막의 단백질을 손상시키고 조직을 부식시킨다.
+- 대처: 눈에 들어간 경우, 즉시 눈을 비비지 말고 흐르는 물이나 세안 도구로 충분히 씻어야 한다. 피부에 묻은 경우, 노출 부위를 많은 양의 물로 씻는다. 중화시키려고 염기성 물질을 뿌리면 반응열이 발생해 손상이 더욱 심해질 수 있으므로 주의한다. 응급 대처를 한 후, 반드시 응급실에서 처치받는다.
+
+염기성 물질 노출 (예: 수산화나트륨, 수산화칼륨, 암모니아수 등)
+- 증상: 미끄럽거나 비누 같은 느낌, 따가움, 통증, 피부 발적, 눈의 충혈과 흐림, 눈물, 시야 흐림 등이 나타날 수 있다.
+- 원인: 염기가 지방과 단백질을 녹여 조직 깊숙이 침투할 수 있다.
+- 대처: 눈에 들어간 경우, 즉시 눈을 비비지 말고 흐르는 물이나 세안 도구로 충분히 씻어야 한다. 피부에 묻은 경우, 즉시 눈을 비비지 말고 흐르는 물이나 세안 도구로 충분히 씻는다. 또한, 즉시 응급실에서 처치받는다.`
+      },
+      fire: {
+        title: '2. 화재 및 폭발',
+        text: `화재
+대처: 인화성 물질은 화재 발생 구역과 먼 곳으로 옮겨 더 이상 불이 옮겨붙지 않도록 한다. 비치되어 있는 소화기 또는 모래를 사용해 소화 한다. 이 때 소화기는 절대 사람을 향해 사용하지 않도록 주의한다. 또한, 물에 잘 섞이지 않는 것에 불이 붙었을 경우, 절대 물을 사용하지 않도록 주의한다.
+
+폭발
+대처: 실험실에 있는 사람들을 안전한 장소로 대피시킨다. 대피할 때는 굉음으로 청각 장애를 유발할 수 있으니 귀를 막고 대피한다. 또한, 연기나 가스에 의한 질식 등에 대비해 바람이 불어오는 방향으로 파편을 주의하며 대피해야 한다.
+
+밀폐 공간 내 가스 위험
+산소 부족, 유독 가스 축적, 가연성 가스 축적의 위험이 있다.
+증상: 산소가 부족하면 두통, 어지러움, 빠른 호흡, 판단 저하, 비틀거림 등의 증상이 나타나며, 심할 경우 의식 저하가 발생할 수 있다.
+- 대처: 밀폐공간에 누군가 쓰러져 있더라도 외부에서 직접 들어가 구조하려고 하면 매우 위험하다. 주변에 알리고 문을 열어 환기할 수 있으면 안전한 위치에서 환기를 시도한 뒤, 즉시 119에 신고한다.`
+      },
+      wound: {
+        title: '3. 상처 및 출혈',
+        text: `유리 비커, 플라스크, 시험관 등이 파손되거나 메스, 주사침과 같은 날카로운 도구에 베인 경우에 발생할 수 있습니다. 이는 출혈 및 감염, 조직 손상, 화학물질의 체내 침투 등 여러 위험성을 보유하고 있어 빠른 응급처치가 필요합니다.
+
+작은 상처일 경우, 흐르는 물로 상처 부위를 세척한 뒤, 깨끗한 거즈로 압박하여 출혈을 멈춰야 합니다. 이후, 포비돈 요오드(빨간약)이나 소독용 알코올을 통해 상처 부위를 소독하여 밴드를 부착합니다.
+
+심한 출혈일 경우, 깨끗한 천이나 거즈로 지속적으로 압박해야 하며 가능하면 상처 부위를 심장보다 높게 유지하는 것이 좋습니다. 이는 중력에 의해 해당 부위로 유입되는 혈류량을 줄여 출혈을 감소시키기 위함이며, 이후 즉시 응급의료기관에 연락하여 조치를 취해야 합니다.`
+      },
+      electric: {
+        title: '4. 감전사고',
+        text: `실험실의 다양한 전기 장비를 젖은 손으로 조작하거나 과부하 전원 사용 등으로 인해 발생할 수 있습니다. 낮은 전류에 의한 감전일 경우, 근육 경련과 통증을 동반할 수 있지만, 높은 전류일 경우, 화상까지 이어질 수 있습니다.
+
+이때 감전된 사람을 맨 손으로 직접 만지면 구조자 또한 감전될 수 있으므로 즉시 전원을 차단하는 것으로 응급처치를 시작해야 합니다. 하지만, 이를 직접적으로 조작할 수 없는 경우, 나무나 플라스틱과 같은 절연체를 이용하여 피해자를 전원으로부터 분리해야 합니다. 이후, 환자의 의식과 호흡 상태를 확인하여 필요 시 심폐소생술을 실시해야 합니다. 이후, 즉시 의료 기관으로 이송해야 합니다.`
+      },
+      coldburn: {
+        title: '5. 저온화상',
+        text: `매우 낮은 온도의 물질과 접촉할 때 발생합니다. 실험실에서 사용하는 액체 질소나 드라이아이스, 혹은 그 외 냉매 물질과 같은 저온 물질로 인해 피부의 수분이 얼어 조직 손상이 발생할 수 있습니다. 이로 인해 피부 조직이 괴사하거나 물집이 형성할 수 있으며, 심할 경우 조직 절단을 해야 합니다.
+
+응급 처치 방법으로 저온 물질과의 접촉을 즉시 중단해야 하며, 환부를 37~39도 정도의 미지근한 물로 천천히 가온해야 합니다. 이때 뜨거운 물을 사용할 경우, 이미 손상된 조직에 추가적인 상처를 유발할 수 있기 때문에 피해야 합니다. 절대로 상처 부위를 문지르거나 마사지하면 안 되며, 보호막 역할을 하는 물집을 터뜨리지 않은 상태에서 의료 기관의 진료를 받는 것이 좋습니다.`
+      }
+    };
+
+    function updateBackButton() {
+      const backBtn = document.getElementById('backBtn');
+      backBtn.style.display = historyStack.length > 1 ? 'block' : 'none';
+    }
+
+    function cleanupPages(targetPage) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('enter-forward', 'exit-forward', 'enter-back', 'exit-back', 'active');
+      });
+      targetPage.classList.add('active');
+    }
+
+    function animateTransition(fromPage, toPage, direction) {
+      if (!toPage || isTransitioning || fromPage === toPage) return;
+
+      isTransitioning = true;
+      const enterClass = direction === 'back' ? 'enter-back' : 'enter-forward';
+      const exitClass = direction === 'back' ? 'exit-back' : 'exit-forward';
+
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('enter-forward', 'exit-forward', 'enter-back', 'exit-back');
+      });
+
+      if (fromPage) {
+        fromPage.classList.add('active');
+        fromPage.classList.add(exitClass);
+      }
+
+      toPage.classList.add('active');
+      toPage.classList.add(enterClass);
+
+      setTimeout(() => {
+        cleanupPages(toPage);
+        isTransitioning = false;
+      }, 360);
+    }
+
+    function showPage(pageId, options = {}) {
+      const push = options.push !== false;
+      const direction = options.direction || 'forward';
+      const nextPage = document.getElementById(pageId);
+      const currentPage = document.getElementById(currentPageId);
+
+      if (!nextPage || pageId === currentPageId || isTransitioning) return;
+
+      if (push) {
+        historyStack.push(pageId);
+      }
+
+      animateTransition(currentPage, nextPage, direction);
+      currentPageId = pageId;
+      updateBackButton();
+      window.location.hash = pageId;
+
+      if (pageId === 'tool-intro') resetToolIntro();
+      if (pageId === 'jeongbyeong') resetQuiz();
+      if (pageId === 'waste-disposal') resetWasteDisposal();
+      if (pageId === 'emergency') resetEmergency();
+    }
+
+    function goBack() {
+      if (historyStack.length <= 1 || isTransitioning) return;
+      historyStack.pop();
+      const prevPageId = historyStack[historyStack.length - 1];
+      showPage(prevPageId, { push: false, direction: 'back' });
+    }
+
+    function selectDevice(deviceType) {
+      document.body.classList.remove('device-desktop', 'device-mobile');
+      document.body.classList.add(deviceType === 'mobile' ? 'device-mobile' : 'device-desktop');
+      showPage('main-menu');
+    }
+
+    function resetQuiz() {
+      quizCurrentIndex = 0;
+      quizAnswers = Array(quizData.length).fill(null);
+
+      const startBox = document.getElementById('quizStartBox');
+      const quizBox = document.getElementById('quizBox');
+      const resultBox = document.getElementById('quizResultBox');
+
+      if (startBox) startBox.style.display = 'block';
+      if (quizBox) quizBox.style.display = 'none';
+      if (resultBox) {
+        resultBox.style.display = 'none';
+        resultBox.innerHTML = '';
+      }
+    }
+
+    function startQuiz() {
+      quizCurrentIndex = 0;
+      quizAnswers = Array(quizData.length).fill(null);
+
+      document.getElementById('quizStartBox').style.display = 'none';
+      document.getElementById('quizResultBox').style.display = 'none';
+      document.getElementById('quizBox').style.display = 'flex';
+
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      const item = quizData[quizCurrentIndex];
+      const progress = document.getElementById('quizProgress');
+      const question = document.getElementById('quizQuestion');
+      const options = document.getElementById('quizOptions');
+      const prevBtn = document.getElementById('quizPrevBtn');
+      const nextBtn = document.getElementById('quizNextBtn');
+
+      if (!item || !progress || !question || !options || !prevBtn || !nextBtn) return;
+
+      progress.textContent = `${quizCurrentIndex + 1} / ${quizData.length}`;
+      question.textContent = `${quizCurrentIndex + 1}번. ${item.question}`;
+      options.innerHTML = '';
+
+      item.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'quiz-option';
+
+        if (quizAnswers[quizCurrentIndex] === index) {
+          button.classList.add('selected');
+        }
+
+        button.textContent = `(${index + 1}) ${option}`;
+        button.addEventListener('click', () => selectQuizOption(index));
+        options.appendChild(button);
+      });
+
+      prevBtn.disabled = quizCurrentIndex === 0;
+      nextBtn.textContent = quizCurrentIndex === quizData.length - 1 ? '결과 보기' : 'Next';
+    }
+
+    function selectQuizOption(optionIndex) {
+      quizAnswers[quizCurrentIndex] = optionIndex;
+      renderQuizQuestion();
+    }
+
+    function changeQuestion(direction) {
+      if (direction === -1) {
+        if (quizCurrentIndex > 0) {
+          quizCurrentIndex -= 1;
+          renderQuizQuestion();
+        }
+        return;
+      }
+
+      if (quizAnswers[quizCurrentIndex] === null) {
+        alert('답을 하나 선택해 주세요.');
+        return;
+      }
+
+      if (quizCurrentIndex < quizData.length - 1) {
+        quizCurrentIndex += 1;
+        renderQuizQuestion();
+      } else {
+        showQuizResult();
+      }
+    }
+
+    function calculateQuizScore() {
+      return quizAnswers.reduce((total, answerIndex) => {
+        if (answerIndex === null) return total;
+        return total + (answerIndex + 1);
+      }, 0);
+    }
+
+    function showQuizResult() {
+      if (quizAnswers.some(answer => answer === null)) {
+        alert('모든 문항에 답해 주세요.');
+        return;
+      }
+
+      const score = calculateQuizScore();
+      let title = '';
+      let text = '';
+
+      if (score >= 20 && score <= 25) {
+        title = '주의 / 경보 / 알림';
+        text = '당신은 위급한 하나고증후군을 보이고 있습니다. 빠른 시일 내에 또래상담부나 인연 친구들에게 상담을 요청하세요';
+      } else if (score >= 13 && score <= 19) {
+        title = '당신도 정상은 아닙니다';
+        text = '경미한 하나고증후군을 보이고 있습니다. 당신이 고3이라면 집중 클리닉이 필요합니다.';
+      } else {
+        title = '당신은 그나마 정상이네요.';
+        text = '지금 생활을 유지하세요!';
+      }
+
+      const quizBox = document.getElementById('quizBox');
+      const resultBox = document.getElementById('quizResultBox');
+
+      quizBox.style.display = 'none';
+      resultBox.style.display = 'flex';
+      resultBox.innerHTML = `
+        <div class="quiz-result-title">${title}</div>
+        <div class="quiz-score">총점: ${score}점</div>
+        <div class="quiz-result-text">${text}</div>
+        <button class="quiz-nav-btn" style="margin-top:18px;" onclick="resetQuiz()">처음으로</button>
+      `;
+    }
+
+    function resetToolIntro() {
+      const toolSearchInput = document.getElementById('toolSearchInput');
+      const detail = document.getElementById('toolDetail');
+
+      if (toolSearchInput) toolSearchInput.value = '';
+
+      if (detail) {
+        detail.dataset.selected = '';
+        detail.innerHTML = '<div class="tool-empty">아래 기구 버튼을 클릭하면 설명이 여기에 표시됩니다.</div>';
+      }
+
+      renderToolButtons('');
+    }
+
+    function renderToolButtons(keyword = '') {
+      const grid = document.getElementById('toolButtonGrid');
+      if (!grid) return;
+
+      const normalizedKeyword = keyword.split(' ').join('').toLowerCase();
+      const filtered = toolData.filter(tool => tool.name.split(' ').join('').toLowerCase().includes(normalizedKeyword));
+
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="tool-empty">검색 결과가 없습니다.</div>';
+        return;
+      }
+
+      filtered.forEach(tool => {
+        const button = document.createElement('button');
+        button.className = 'tool-btn';
+        button.textContent = tool.name;
+        button.addEventListener('click', () => showToolDetail(tool.name));
+        grid.appendChild(button);
+      });
+    }
+
+    function showToolDetail(name) {
+      const detail = document.getElementById('toolDetail');
+      const tool = toolData.find(item => item.name === name);
+      if (!detail || !tool) return;
+
+      detail.dataset.selected = name;
+      detail.innerHTML = `<h2>${tool.name}</h2><div>${tool.description}</div>`;
+    }
+
+    function resetWasteDisposal() {
+      const introBox = document.getElementById('wasteIntroBox');
+      const tabsBox = document.getElementById('wasteTabsBox');
+      const detailBox = document.getElementById('wasteDetailBox');
+
+      if (introBox) introBox.style.display = 'block';
+      if (tabsBox) tabsBox.style.display = 'none';
+
+      if (detailBox) {
+        detailBox.style.display = 'none';
+        detailBox.innerHTML = '';
+      }
+
+      document.querySelectorAll('.waste-tab-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function showWasteTabs() {
+      const introBox = document.getElementById('wasteIntroBox');
+      const tabsBox = document.getElementById('wasteTabsBox');
+      const detailBox = document.getElementById('wasteDetailBox');
+
+      if (introBox) introBox.style.display = 'none';
+      if (tabsBox) tabsBox.style.display = 'block';
+
+      if (detailBox) {
+        detailBox.style.display = 'block';
+        detailBox.innerHTML = '<div class="tool-empty">위의 유기 / 무기 / 산 / 염기 버튼을 클릭하면 설명이 여기에 표시됩니다.</div>';
+      }
+    }
+
+    function showWasteDetail(type) {
+      const detailBox = document.getElementById('wasteDetailBox');
+      const item = wasteData[type];
+      if (!detailBox || !item) return;
+
+      document.querySelectorAll('.waste-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const labelMap = { organic: '유기', inorganic: '무기', acid: '산', base: '염기' };
+
+      document.querySelectorAll('.waste-tab-btn').forEach(btn => {
+        if (btn.textContent.trim() === labelMap[type]) {
+          btn.classList.add('active');
+        }
+      });
+
+      detailBox.style.display = 'block';
+      detailBox.innerHTML = `<h2>${item.title}</h2><div>${item.text}</div>`;
+    }
+
+    function resetEmergency() {
+      const detailBox = document.getElementById('emergencyDetailBox');
+
+      if (detailBox) {
+        detailBox.style.display = 'none';
+        detailBox.innerHTML = '';
+      }
+    }
+
+    function showEmergencyDetail(type) {
+      const detailBox = document.getElementById('emergencyDetailBox');
+      const item = emergencyData[type];
+      if (!detailBox || !item) return;
+
+      detailBox.style.display = 'block';
+      detailBox.innerHTML = `<h2>${item.title}</h2><div class="emergency-content">${item.text}</div>`;
+    }
+
+    window.showPage = showPage;
+    window.goBack = goBack;
+    window.selectDevice = selectDevice;
+    window.startQuiz = startQuiz;
+    window.changeQuestion = changeQuestion;
+    window.resetQuiz = resetQuiz;
+    window.showWasteTabs = showWasteTabs;
+    window.showWasteDetail = showWasteDetail;
+    window.showEmergencyDetail = showEmergencyDetail;
+
+    window.addEventListener('load', () => {
+      document.body.classList.add('device-desktop');
+
+      const backBtn = document.getElementById('backBtn');
+      backBtn.addEventListener('click', goBack);
+
+      const toolSearchInput = document.getElementById('toolSearchInput');
+
+      if (toolSearchInput) {
+        renderToolButtons('');
+        toolSearchInput.addEventListener('input', event => {
+          renderToolButtons(event.target.value.trim());
+        });
+      }
+
+      const hash = window.location.hash.replace('#', '');
+      const validPage = hash ? document.getElementById(hash) : null;
+
+      if (validPage) {
+        historyStack.length = 0;
+        historyStack.push('front', hash);
+        currentPageId = hash;
+        cleanupPages(validPage);
+      } else {
+        const frontPage = document.getElementById('front');
+        historyStack.length = 0;
+        historyStack.push('front');
+        currentPageId = 'front';
+        cleanupPages(frontPage);
+      }
+
+      updateBackButton();
+    });
+  </script>
+</body>
+</html>
